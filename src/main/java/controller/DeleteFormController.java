@@ -103,8 +103,6 @@ public class DeleteFormController extends HttpServlet {
 //		case "5":
 //			return "その他";
 //			
-//		default:
-//			throw new IllegalArgumentException("Unexpected value: " + affiliation);
 //		}
 //	}
 	
@@ -123,11 +121,6 @@ public class DeleteFormController extends HttpServlet {
 //		case "4":
 //			return "一般";
 //			
-//		case "5":
-//			return "その他";
-//			
-//		default:
-//			throw new IllegalArgumentException("Unexpected value: " + job_Title);
 //		}
 //	}
 }

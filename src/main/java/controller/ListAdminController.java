@@ -40,8 +40,9 @@ public class ListAdminController extends HttpServlet {
 		if (session == null) {
 			request.getRequestDispatcher("login").forward(request, response);
 		}
-		
+		String employee_Id = (String) session.getAttribute("employee_id");
 		String employee_Name = (String) session.getAttribute("employee");
+		request.setAttribute("employee_Id",employee_Id);
 		request.setAttribute("employee",employee_Name);
 		
 		// メッセージの表示

@@ -17,8 +17,8 @@ import jakarta.servlet.http.HttpSession;
 import utils.HashGenerator;
 
 /*
- * 登録画面用
- * Servlet implementation class CreateController
+ * ログイン画面用
+ * Servlet class CreateController
  * */
 
 @WebServlet("/login")
@@ -42,11 +42,10 @@ public class LoginController extends HttpServlet {
 			request.setAttribute("message", "ログインしてください");
 		}
 		
-		// create_form.jspを表示
+		// login.jspを表示
 		String view = "/WEB-INF/views/login.jsp";
 		RequestDispatcher dispatcher = request.getRequestDispatcher(view);
 		dispatcher.forward(request, response);
-	
 	}
 	
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -63,15 +62,13 @@ public class LoginController extends HttpServlet {
 				String hashedPassword = HashGenerator.generateHash(password);
 			try (PreparedStatement statement = connection.prepareStatement(SQL_SELECT)){
 				
-				// 
 				statement.setString(1, username);
 				statement.setString(2, hashedPassword);
 				ResultSet result = statement.executeQuery();
 				
 				if (result.next()) {
-					// 
 					int employee_id = result.getInt("employee_id");
-					String employee = result.getString("employee");
+					String job_title = result.getString("job_title");
 					
 					// サーバーの保持するセッションを取得する
 					HttpSession session = request.getSession();
@@ -79,32 +76,38 @@ public class LoginController extends HttpServlet {
 					// キーと値のペアでセッションに登録する
 					session.setAttribute("employee_id", employee_id);
 					session.setAttribute("username", username);
-					session.setAttribute("employee", employee);
+					session.setAttribute("job_title", job_title);
 					
-					// String employeeName = request.setAttribute("employee", employee);
-					response.sendRedirect("list");
+					// 権限別listにフォワードして表示
+					String view = "/WEB-INF/views/";
+					String listAdmin = "listAdmin.jsp";
+					String list = "list.jsp";
 					
-					// list.jspにフォワードして表示
-//					String view = "/WEB-INF/views/list.jsp";
-//					RequestDispatcher dispatcher = request.getRequestDispatcher(view);
-//					dispatcher.forward(request, response);
+					// 役職名置換
+					int job_Title_Num = Integer.parseInt(job_Title(job_title));
+					if (job_Title_Num <= 2) {
+						// ２以下の場合
+						RequestDispatcher dispatcher = request.getRequestDispatcher(view + listAdmin);
+						dispatcher.forward(request, response);
+					}	else if(job_Title_Num > 2) {
+						// 2より大きい場合
+						RequestDispatcher dispatcher = request.getRequestDispatcher(view + list);
+						dispatcher.forward(request, response);
+					}
+					} else {
+						// 失敗時のメッセージ
+						request.setAttribute("message", "ログイン失敗しました");
 					
-				} else {
-					// 失敗時のメッセージ
-					request.setAttribute("message", "ログイン失敗しました");
-					
-					// ログイン画面に戻る
-					String view = "/WEB-INF/views/login.jsp";
-					request.getRequestDispatcher(view).forward(request, response);
-					
+						// ログイン画面に戻る
+						String view = "/WEB-INF/views/login.jsp";
+						request.getRequestDispatcher(view).forward(request, response);
+					}
 				}
-			}
-		} catch (SQLException e) {
-			throw new ServletException("Database Connection Failed", e);
-		} catch (Exception e) {
-			throw new ServletException("Generate hash Failed", e);
+			} catch (SQLException e) {
+				throw new ServletException("Database Connection Failed", e);
+			} catch (Exception e) {
+				throw new ServletException("Generate hash Failed", e);
 		}
-	
 	}
 	
 	// JDBCドライバ接続
@@ -117,5 +120,24 @@ public class LoginController extends HttpServlet {
 			messages_jdbc_Driver = "Exception:" + e.getMessage();
 		}
 		return messages_jdbc_Driver;
+	}
+	
+	// 役職名置換
+	protected String job_Title(String job_Title) {
+		switch (job_Title){
+		case "課長":
+			return "1";
+			
+		case "係長":
+			return "2";
+		
+		case "主任":
+			return "3";
+			
+		case "一般":
+			return "4";
+			
+		}
+		return job_Title;
 	}
 }
